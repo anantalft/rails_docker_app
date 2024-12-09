@@ -3,45 +3,37 @@ require "active_support/core_ext/integer/time"
 Rails.application.configure do
   # Settings specified here will take precedence over those in config/application.rb.
 
-  # In the development environment your application's code is reloaded any time
-  # it changes. This slows down response time but is perfect for development
-  # since you don't have to restart the web server when you make code changes.
-  config.cache_classes = false
+  # Cache classes for better performance.
+  config.cache_classes = true
 
-  # Do not eager load code on boot.
-  config.eager_load = false
+  # Eager load code on boot. This is generally recommended in staging and production environments.
+  config.eager_load = true
 
-  # Show full error reports.
-  config.consider_all_requests_local = true
+  # Show full error reports only if explicitly enabled (useful for debugging in staging).
+  config.consider_all_requests_local = ENV["SHOW_FULL_ERRORS"].present?
 
   # Enable server timing
   config.server_timing = true
-  config.web_console.permissions = '0.0.0.0/0'
 
+  # Enable/disable caching. Staging should ideally have similar caching settings to production.
+  config.action_controller.perform_caching = true
+  config.cache_store = :memory_store
+  config.public_file_server.headers = {
+    "Cache-Control" => "public, max-age=#{1.day.to_i}"
+  }
 
-  # Enable/disable caching. By default caching is disabled.
-  # Run rails dev:cache to toggle caching.
-  if Rails.root.join("tmp/caching-dev.txt").exist?
-    config.action_controller.perform_caching = true
-    config.action_controller.enable_fragment_cache_logging = true
-
-    config.cache_store = :memory_store
-    config.public_file_server.headers = {
-      "Cache-Control" => "public, max-age=#{2.days.to_i}"
-    }
-  else
-    config.action_controller.perform_caching = false
-
-    config.cache_store = :null_store
-  end
-
-  # Store uploaded files on the local file system (see config/storage.yml for options).
+  # Store uploaded files using the same service as production (e.g., AWS S3, GCS, etc.).
   config.active_storage.service = :local
 
-  # Don't care if the mailer can't send.
-  config.action_mailer.raise_delivery_errors = false
-
+  # Ensure mailer errors are raised to test email workflows in staging.
+  config.action_mailer.raise_delivery_errors = true
   config.action_mailer.perform_caching = false
+
+  # Set logging level to debug for verbose logs, or info for a cleaner view.
+  config.log_level = :debug
+
+  # Use default Rails logger or any configured third-party service (e.g., Loggly, Datadog).
+  config.logger = Logger.new($stdout)
 
   # Print deprecation notices to the Rails logger.
   config.active_support.deprecation = :log
@@ -52,21 +44,23 @@ Rails.application.configure do
   # Tell Active Support which deprecation messages to disallow.
   config.active_support.disallowed_deprecation_warnings = []
 
-  # Raise an error on page load if there are pending migrations.
-  config.active_record.migration_error = :page_load
+  # Use default queue adapter for background jobs (or configure for your staging needs).
+  config.active_job.queue_adapter = :async
 
-  # Highlight code that triggered database queries in logs.
-  config.active_record.verbose_query_logs = true
+  # Enable asset compression and digests.
+  config.assets.js_compressor = :uglifier
+  config.assets.compile = false
 
   # Suppress logger output for asset requests.
   config.assets.quiet = true
 
-  # Raises error for missing translations.
-  # config.i18n.raise_on_missing_translations = true
+  # Enable verbose query logs for debugging in staging.
+  config.active_record.verbose_query_logs = true
 
-  # Annotate rendered view with file names.
-  # config.action_view.annotate_rendered_view_with_filenames = true
+  # Don't raise errors on missing translations in staging.
+  # config.i18n.raise_on_missing_translations = false
 
-  # Uncomment if you wish to allow Action Cable access from any origin.
-  # config.action_cable.disable_request_forgery_protection = true
+  # Ensure web console is not configured in staging to avoid conflicts.
+  # If debugging is needed, use `binding.pry` or better debugging tools.
+  config.web_console.permissions = nil if defined?(WebConsole)
 end
